@@ -36,12 +36,15 @@ const upload = multer({ storage });
 router.post('/', upload.single('photodata'), async (req, res) => {
   if (validateAgainstSchema(req.body, PhotoSchema)) {
     try {
-      const id = await insertNewPhoto(req.body)
+      //adapted from 8-2
+      const id = await insertNewPhoto(req.body, req.file.mimetype, req.file.filename)
       res.status(201).send({
         id: id,
         links: {
           photo: `/photos/${id}`,
-          business: `/businesses/${req.body.businessId}`
+          business: `/businesses/${req.body.businessId}`,
+          mimetype: req.file.mimetype,
+          filename: req.file.filename
         }
       })
     } catch (err) {
