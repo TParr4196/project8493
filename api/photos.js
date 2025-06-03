@@ -33,7 +33,7 @@ const upload = multer({ storage });
 /*
  * POST /photos - Route to create a new photo.
  */
-router.post('/', upload.single('photo'), async (req, res) => {
+router.post('/', upload.single('photodata'), async (req, res) => {
   if (validateAgainstSchema(req.body, PhotoSchema)) {
     try {
       const id = await insertNewPhoto(req.body)

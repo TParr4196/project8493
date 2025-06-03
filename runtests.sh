@@ -15,8 +15,11 @@ status() {
 
 tempfile=curl.out.$$.tmp
 
+# got help from chatgpt formatting this test: helped me swap to -F and remove content header
 status POST /photos
 curl -s -X POST \
-    ${BASEURL}/photos -H 'Content-Type: application/json' \
-      -d '{"businessid": 18, "caption": "Pizza"}' | tee "$tempfile"
+    ${BASEURL}/photos \
+      -F 'photodata=@./testassets/pizza.png' \
+      -F 'businessId=683e011f4a383c9f7e023018' \
+      -F 'caption=Pizza' | tee "$tempfile"
     photoid=$(awk -F: '{print $2}' "$tempfile" | awk -F, '{print $1}' | tr -d '"')
