@@ -1,9 +1,10 @@
 /*
  * API sub-router for businesses collection endpoints.
  */
+require('dotenv').config()
 
 const { Router } = require('express')
-
+const multer = require('multer');
 const { validateAgainstSchema } = require('../lib/validation')
 const {
   PhotoSchema,
@@ -12,6 +13,22 @@ const {
 } = require('../models/photo')
 
 const router = Router()
+const { GridFsStorage } = require('multer-gridfs-storage');
+
+
+//adapted from challenge 8-2
+const storage = new GridFsStorage({
+    //adapted from /lib/mongo.js
+    url: `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || 27017}/${process.env.MONGO_AUTH_DB_NAME || process.env.MONGO_DB_NAME}`,
+    file: (req, file) => {
+        return {
+            filename: file.originalname,
+            bucketName: 'uploads'
+        };
+    },
+});
+
+const upload = multer({ storage });
 
 /*
  * POST /photos - Route to create a new photo.
