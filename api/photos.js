@@ -4,31 +4,18 @@
 require('dotenv').config()
 
 const { Router } = require('express')
-const multer = require('multer');
 const { validateAgainstSchema } = require('../lib/validation')
 const {
   PhotoSchema,
-  insertNewPhoto,
-  getPhotoById
 } = require('../models/photo')
+const { getDbReference, getGridFsBucketReference, getUploadReference } = require("../lib/mongo")
 
 const router = Router()
-const { GridFsStorage } = require('multer-gridfs-storage');
-
 
 //adapted from challenge 8-2
-const storage = new GridFsStorage({
-    //adapted from /lib/mongo.js
-    url: `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || 27017}/${process.env.MONGO_AUTH_DB_NAME || process.env.MONGO_DB_NAME}`,
-    file: (req, file) => {
-        return {
-            filename: file.originalname,
-            bucketName: 'uploads'
-        };
-    },
-});
+// https://forum.freecodecamp.org/t/how-to-upload-image-to-mongodb-and-string-data-simultaneously-using-gridfs/248610 used to help with caption
 
-const upload = multer({ storage });
+const upload = getUploadReference()
 
 /*
  * POST /photos - Route to create a new photo.
@@ -37,14 +24,12 @@ router.post('/', upload.single('photodata'), async (req, res) => {
   if (validateAgainstSchema(req.body, PhotoSchema)) {
     try {
       //adapted from 8-2
-      const id = await insertNewPhoto(req.body, req.file.mimetype, req.file.filename)
+      const id = req.file.id.toString()
       res.status(201).send({
         id: id,
         links: {
           photo: `/photos/${id}`,
           business: `/businesses/${req.body.businessId}`,
-          mimetype: req.file.mimetype,
-          filename: req.file.filename
         }
       })
     } catch (err) {
@@ -65,12 +50,19 @@ router.post('/', upload.single('photodata'), async (req, res) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const photo = await getPhotoById(req.params.id)
-    if (photo) {
-      res.status(200).send(photo)
-    } else {
-      next()
+    //adapted from 8-2
+    const file = await getDbReference().collection('uploads.files')
+      .findOne({ filename: "pizza.png" });
+
+    if (!file) {
+      return res.status(404).send('Not found');
     }
+    console.log(file)
+
+    res.type(file.contentType);
+    const download_stream = getGridFsBucketReference().
+      openDownloadStreamByName(file.filename);
+    download_stream.pipe(res);
   } catch (err) {
     console.error(err)
     res.status(500).send({
