@@ -9,6 +9,7 @@ const {
   PhotoSchema,
 } = require('../models/photo')
 const { getDbReference, getGridFsBucketReference, getUploadReference } = require("../lib/mongo")
+const { ObjectId } = require('mongodb')
 
 const router = Router()
 
@@ -22,6 +23,12 @@ const upload = getUploadReference()
  */
 router.post('/', upload.single('photodata'), async (req, res) => {
   if (validateAgainstSchema(req.body, PhotoSchema)) {
+    //adapted from 5-1
+    const response = await getDbReference().collection('uploads.files')
+      .updateOne({ _id: req.file.id }, { $set: { metadata: {
+        businessId: req.body.businessId,
+        caption: req.body.caption
+      }}});
     try {
       //adapted from 8-2
       const id = req.file.id.toString()
@@ -52,8 +59,8 @@ router.get('/:id', async (req, res, next) => {
   try {
     //adapted from 8-2
     const file = await getDbReference().collection('uploads.files')
-      .findOne({ filename: "pizza.png" });
-
+      .findOne({ _id: new ObjectId(req.params.id) });
+    
     if (!file) {
       return res.status(404).send('Not found');
     }

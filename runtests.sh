@@ -17,7 +17,7 @@ tempfile=curl.out.$$.tmp
 
 # got help from chatgpt formatting this test: helped me swap to -F and remove content header
 status POST /photos
-curl -s -v -X POST \
+curl -s -X POST \
     ${BASEURL}/photos \
       -F 'photodata=@./testassets/pizza.png' \
       -F 'businessId=683e011f4a383c9f7e023018' \

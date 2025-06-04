@@ -5,7 +5,6 @@
 const { ObjectId } = require('mongodb')
 
 const { getDbReference } = require('../lib/mongo')
-const { extractValidFields } = require('../lib/validation')
 
 /*
  * Schema describing required/optional fields of a photo object.
