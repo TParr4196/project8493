@@ -13,12 +13,21 @@ const { Router } = require('express')
 
 const router = Router()
 
+const { getDbReference, getGridFsBucketReference } = require("../lib/mongo")
+const { ObjectId } = require('mongodb')
+
 /*
  * GET /photos/{id} - Route to fetch info about a specific photo.
  */
-router.get('/photos', async (req, res, next) => {
+router.get('/photos/:id', async (req, res, next) => {
   try {
-    res.status(200).send("helloworld")
+    const file = await getDbReference().collection('uploads.files')
+      .findOne({ _id: new ObjectId(req.params.id.split(".")[0]) });
+    res.type(file.contentType);
+    console.log(file)
+    const download_stream = getGridFsBucketReference().
+      openDownloadStreamByName(file.filename);
+    download_stream.pipe(res);
   } catch (err) {
     console.error(err)
     res.status(500).send({

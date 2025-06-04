@@ -22,6 +22,13 @@ const BusinessSchema = {
   email: { required: false }
 }
 exports.BusinessSchema = BusinessSchema
+const work = {"name": "Brunos", 
+  "address": "6th st.", 
+  "city": "Bemd", 
+  "state": "OR", 
+  "zip": "97333", 
+  "category": "Fud", 
+  "subcategory": "Gud"}
 
 /*
  * Executes a DB query to return a single page of businesses.  Returns a
@@ -86,13 +93,20 @@ async function getBusinessById(id) {
   } else {
     const results = await collection.aggregate([
       { $match: { _id: new ObjectId(id) } },
-      { $lookup: {
-          from: "photos",
-          localField: "_id",
-          foreignField: "businessId",
-          as: "photos"
-      }}
     ]).toArray()
+    
+    //got help from chatgpt with adding .toArray()
+    const unformattedPhotos = await db.collection('uploads.files').find({'metadata.businessId':id}).toArray()
+    // the way I originally did it:
+    // const allPhotos = await db.collection('uploads.files').aggregate([{ $match: {metadata: {$exists: true}}}]).toArray()
+    let photos = []
+    for (const index in unformattedPhotos){
+      photos.push({
+        caption: unformattedPhotos[index].metadata.caption,
+        download: `/media/photos/${unformattedPhotos[index]._id.toString()}.${unformattedPhotos[index].contentType.split("/")[1]}`
+      })
+    }
+    results[0].photos = photos
     return results[0]
   }
 }

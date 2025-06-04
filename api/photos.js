@@ -8,7 +8,7 @@ const { validateAgainstSchema } = require('../lib/validation')
 const {
   PhotoSchema,
 } = require('../models/photo')
-const { getDbReference, getGridFsBucketReference, getUploadReference } = require("../lib/mongo")
+const { getDbReference, getUploadReference } = require("../lib/mongo")
 const { ObjectId } = require('mongodb')
 
 const router = Router()
@@ -64,12 +64,10 @@ router.get('/:id', async (req, res, next) => {
     if (!file) {
       return res.status(404).send('Not found');
     }
-    console.log(file)
-
-    res.type(file.contentType);
-    const download_stream = getGridFsBucketReference().
-      openDownloadStreamByName(file.filename);
-    download_stream.pipe(res);
+    let response = file.metadata
+    const filetype = file.contentType.split("/")[1]
+    response.download = `/media/photos/${req.params.id}.${filetype}`
+    res.status(200).send(response)
   } catch (err) {
     console.error(err)
     res.status(500).send({
