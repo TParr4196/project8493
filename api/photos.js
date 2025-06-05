@@ -11,6 +11,10 @@ const {
 const { getDbReference, getUploadReference } = require("../lib/mongo")
 const { ObjectId } = require('mongodb')
 
+const amqp = require('amqplib');
+const rabbitmqHost = process.env.RABBITMQ_HOST;
+const rabbitmqUrl = `amqp://${rabbitmqHost}`;
+
 const router = Router()
 
 //adapted from challenge 8-2
@@ -30,8 +34,17 @@ router.post('/', upload.single('photodata'), async (req, res) => {
         caption: req.body.caption
       }}});
     try {
-      //adapted from 8-2
       const id = req.file.id.toString()
+
+      //adapted from challenge 9
+      const connection = await amqp.connect(rabbitmqUrl);
+      const channel = await connection.createChannel();
+      await channel.assertQueue('echo');
+      channel.sendToQueue('echo', Buffer.from(id))
+      await channel.close();
+      await connection.close();
+
+      //adapted from 8-2
       res.status(201).send({
         id: id,
         links: {

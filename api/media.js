@@ -24,7 +24,6 @@ router.get('/photos/:id', async (req, res, next) => {
     const file = await getDbReference().collection('uploads.files')
       .findOne({ _id: new ObjectId(req.params.id.split(".")[0]) });
     res.type(file.contentType);
-    console.log(file)
     const download_stream = getGridFsBucketReference().
       openDownloadStreamByName(file.filename);
     download_stream.pipe(res);
