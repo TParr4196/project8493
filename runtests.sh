@@ -39,3 +39,9 @@ curl ${BASEURL}/photos/$photoid
 
 status GET /businessess/:id
 curl ${BASEURL}/businesses/$businessid
+
+status GET /media/photos/:id
+curl "$BASEURL/media/photos/$photoid" -o "./testassets/testoutputs/$photoid.png"
+
+status GET /media/thumbs/:id
+curl "$BASEURL/media/thumbs/$photoid" -o "./testassets/testoutputs/thumb$photoid.jpeg"

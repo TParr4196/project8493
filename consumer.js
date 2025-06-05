@@ -34,11 +34,13 @@ async function adaptFile(msg){
         const buffer = await image.getBufferAsync(Jimp.MIME_JPEG)
         const bucket = getThumbBucket()
         
+        const newmetadata = fileRef.metadata
+        newmetadata.photo = fileRef._id.toString()
         //https://www.mongodb.com/docs/php-library/current/reference/method/MongoDBGridFSBucket-openUploadStream/
         const uploadStream = await bucket.openUploadStream(
             fileRef.filename, {
                 contentType: Jimp.MIME_JPEG,
-                metadata: fileRef.metadata
+                metadata: newmetadata
             }
         )
         
@@ -46,15 +48,9 @@ async function adaptFile(msg){
         const readable = Readable.from(buffer)
         const response = await readable.pipe(uploadStream)
         
-        const newmetadata = fileRef.metadata
-        const newid = response.id.toString()
-        newmetadata.thumb = `/media/thumbs/${newid}.jpg`
         const respe = await db.collection('uploads.files').updateOne({ _id: ObjectId(fileRef._id) }, 
             { $set: { metadata: newmetadata}});
-        const resp = await db.collection('thumbs').updateOne({ _id: ObjectId(newid) }, { $set: { metadata: {
-                photo: fileRef.id
-            }}});
-        console.log(`adapted ${fileRef._id} to ${newid}`)
+        console.log(`adapted ${fileRef._id} to ${response.id.toString()}`)
 
     }
     // update other code to work with thumb
